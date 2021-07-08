@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -23,35 +22,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 
     private val wm by lazy { getSystemService(Context.WINDOW_SERVICE) as WindowManager }
 
-    private lateinit var aimView: ImageView
-
-    private val overlayPermissionContract =
-        registerForActivityResult(OverlayPermissionContract()) {}
-
-    private val aimSettings by lazy { AimSettings(size = binding.ivAim.width) }
-
-    private val layoutParamsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-    else WindowManager.LayoutParams.TYPE_PHONE
-
-    private val aimViewLayoutParams = WindowManager.LayoutParams(
-        WindowManager.LayoutParams.WRAP_CONTENT,
-        WindowManager.LayoutParams.WRAP_CONTENT,
-        layoutParamsType,
-        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-        PixelFormat.TRANSLUCENT
-    )
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-        init()
-        initListeners()
-    }
-
-    private fun init() {
-        aimView = ImageView(this).apply {
+    private val aimView: ImageView by lazy {
+        ImageView(this).apply {
             setImageDrawable(
                 AppCompatResources.getDrawable(
                     this@MainActivity,
@@ -62,13 +34,86 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
         }
     }
 
+    private val overlayPermissionContract =
+        registerForActivityResult(OverlayPermissionContract()) {
+            /* system doesn't returns result of this permission type,
+             so we need to check it manually */
+            if (binding.switchToggle.isChecked) {
+                if (overlayPermissionGranted())
+                    showAim()
+                else binding.switchToggle.isChecked = false
+            }
+        }
+
+    private val aimSettings = AimSettings()
+
+    private val layoutParamsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+    else WindowManager.LayoutParams.TYPE_PHONE
+
+
+
+
+    private val aimViewLayoutParams = WindowManager.LayoutParams(
+        aimSettings.size,
+        aimSettings.size,
+        layoutParamsType,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        PixelFormat.TRANSLUCENT
+    )
+
+    private val initX = aimViewLayoutParams.x
+    private val initY = aimViewLayoutParams.y
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(binding.root)
+        init()
+        initListeners()
+    }
+
+    private fun init() {
+        binding.seekSize.incrementProgressBy(10)
+        showAim()
+        moveAim()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun moveAim() {
+        var initTouchX = 0f
+        var initTouchY = 0f
+        aimView.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initTouchX = event.rawX
+                    initTouchY = event.rawY
+                    true
+                }
+                MotionEvent.ACTION_UP -> true
+                MotionEvent.ACTION_MOVE -> {
+                    aimViewLayoutParams.x = initX + (event.rawX - initTouchX).toInt()
+                    aimViewLayoutParams.y = initY + (event.rawY - initTouchY).toInt()
+                    updateAimView()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
 
     private fun initListeners() {
         with(binding) {
             switchToggle.setOnCheckedChangeListener { _, isChecked ->
-                toggleAimVisibility(
-                    isChecked
-                )
+                if (isChecked) {
+                    if (!overlayPermissionGranted())
+                        overlayPermissionContract.launch(Unit)
+                    else
+                        showAim()
+                } else
+                    hideAim()
+
             }
             seekSize.setOnSeekBarChangeListener(this@MainActivity)
             vColor0.setOnClickListener { changePreviewAimColor(0) }
@@ -81,62 +126,44 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 
 
     private fun changePreviewAimColor(arrayItemPosition: Int) {
-        binding.ivAim.setColorFilter(colors[arrayItemPosition])
         aimView.setColorFilter(colors[arrayItemPosition])
-    }
-
-    private fun toggleAimVisibility(isVisible: Boolean) {
-        if (isVisible) {
-            if (shouldRequestOverlayPermission())
-                overlayPermissionContract.launch(Unit)
-        }
     }
 
 
     private fun showAim() {
-        if (binding.switchToggle.isChecked && !shouldRequestOverlayPermission()) {
-            if(aimSettings.size == 0) aimSettings.size = binding.ivAim.width
-            aimViewLayoutParams.height = aimSettings.size
-            aimViewLayoutParams.width = aimSettings.size
-            aimView.colorFilter = binding.ivAim.colorFilter
+        if (binding.switchToggle.isChecked && overlayPermissionGranted()) {
             wm.addView(aimView, aimViewLayoutParams)
         }
     }
 
 
-    override fun onPause() {
-        super.onPause()
-        showAim()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        removeAimView()
-    }
-
-
     override fun onDestroy() {
         super.onDestroy()
-        removeAimView()
+        hideAim()
     }
 
-    private fun removeAimView() {
+    private fun hideAim() {
         if (aimView.windowToken != null) {
             wm.removeView(aimView)
         }
     }
 
-    private fun shouldRequestOverlayPermission(): Boolean = !Settings.canDrawOverlays(this)
+    private fun updateAimView() {
+        wm.updateViewLayout(aimView, aimViewLayoutParams)
+    }
+
+    private fun overlayPermissionGranted(): Boolean = Settings.canDrawOverlays(this)
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        val coefficient = progress.toFloat() / 50 //0 - min, 100 - max, 50 - default
-        aimSettings.size = (binding.ivAim.width * coefficient).toInt()
-        binding.ivAim.scaleX = coefficient
-        binding.ivAim.scaleY = coefficient
+        val coefficient = progress.toFloat() / 50 //10 - min, 100 - max, 50 - default
+        aimSettings.size = (aimSettings.defaultSize * coefficient).toInt()
+        aimViewLayoutParams.width = aimSettings.size
+        aimViewLayoutParams.height = aimSettings.size
+        updateAimView()
     }
 
     companion object {

@@ -4,5 +4,6 @@ import android.graphics.Color
 
 data class AimSettings(
     var color: Int = Color.parseColor("#605D58"),
-    var size: Int
+    val defaultSize: Int = 100,
+    var size: Int = defaultSize //random default size,
 )
