@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/ivAim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.36"
+        app:srcCompat="@drawable/ic_aim" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="32dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="24dp">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/switch_toggle_overlay_aim" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/select_color"
+            android:textColor="@color/black" />
+
+        <LinearLayout
+            android:id="@+id/llColors"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/vColor0"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#605D58" />
+
+            <View
+                android:id="@+id/vColor1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#642C6B" />
+
+            <View
+                android:id="@+id/vColor2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#151412" />
+
+            <View
+                android:id="@+id/vColor3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#D2383A" />
+
+            <View
+                android:id="@+id/vColor4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#1CA754" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/change_size"
+            android:textColor="@color/black" />
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/seekSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="50" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

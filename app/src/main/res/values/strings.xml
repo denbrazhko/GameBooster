@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Game Booster</string>
+    <string name="switch_toggle_overlay_aim">Включить прицел</string>
+    <string name="select_color">Выбор цвета</string>
+    <string name="change_size">Изменить размер</string>
+</resources>
