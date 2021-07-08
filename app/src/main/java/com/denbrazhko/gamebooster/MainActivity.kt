@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 
     private fun showAim() {
         if (binding.switchToggle.isChecked && !shouldRequestOverlayPermission()) {
+            if(aimSettings.size == 0) aimSettings.size = binding.ivAim.width
             aimViewLayoutParams.height = aimSettings.size
             aimViewLayoutParams.width = aimSettings.size
             aimView.colorFilter = binding.ivAim.colorFilter
